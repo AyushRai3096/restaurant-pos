@@ -1,0 +1,1302 @@
+@import "@fontsource-variable/inter";
+
+/**
+ * Petpooja's UI was measured from a 1920px-wide screenshot. Every size below is
+ * written in that 1920 space and multiplied by --s, so the layout keeps the same
+ * proportions on any window width instead of only matching at one resolution.
+ *
+ *   --s = 1vw / 19.2   ->  1 unit == 1 Petpooja pixel
+ */
+:root {
+  --s: calc(1vw / 19.2);
+
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --line: #d9d9d9;   /* Petpooja's --border-default */
+  --text: #2b2f38;
+  --muted: #8b919c;
+
+  /* sampled from the Petpooja buttons */
+  --red: #c8232c;
+  --red-dark: #ab1d25;
+  --red-tint: #ffdee2;   /* their light-primary red tint */
+
+  --st-blank: #f0f0f0;   /* --gray-300 */
+  --st-blank-border: #c9ccd2;
+  --st-running: #35b8e8;
+  --st-printed: #2ec27e;
+  --st-paid: #f5c396;
+  --st-runkot: #f5c518;
+
+  /* Petpooja ships the Inter variable font (confirmed from its own bundle).
+     Being a variable font, fractional weights like 550 render correctly. */
+  --font: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  font-family: var(--font);
+  font-size: calc(14 * var(--s));
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.app { display: flex; flex-direction: column; height: 100%; }
+
+/* ---------------- window title bar ---------------- */
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--s));
+  height: calc(29 * var(--s));
+  padding: 0 calc(10 * var(--s));
+  background: #f7f7f8;
+  font-size: calc(12.5 * var(--s));
+  color: #35393f;
+  flex-shrink: 0;
+}
+
+.titlebar-icon {
+  width: calc(15 * var(--s));
+  height: calc(15 * var(--s));
+  border-radius: calc(3 * var(--s));
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.titlebar-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.titlebar-controls { margin-left: auto; display: flex; }
+
+.tb-btn {
+  width: calc(45 * var(--s));
+  height: calc(29 * var(--s));
+  color: #35393f;
+  font-size: calc(13 * var(--s));
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tb-btn:hover { background: #e3e5e8; }
+.tb-btn.close:hover { background: var(--red); color: #fff; }
+
+/* ---------------- main nav ---------------- */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: calc(14 * var(--s));
+  height: calc(70 * var(--s));
+  padding: 0 calc(16 * var(--s));
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.hamburger {
+  position: relative;
+  width: calc(34 * var(--s));
+  height: calc(30 * var(--s));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(5 * var(--s));
+  padding: 0;
+}
+.hamburger i {
+  display: block;
+  height: calc(2.6 * var(--s));
+  background: #2b2f38;
+  border-radius: calc(2 * var(--s));
+}
+.hamburger::after {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--s));
+  right: calc(-1 * var(--s));
+  width: calc(8 * var(--s));
+  height: calc(8 * var(--s));
+  border-radius: 50%;
+  background: #2ec27e;
+}
+
+.logo { display: flex; align-items: center; gap: calc(7 * var(--s)); }
+/* An outlet-supplied logo replaces the text mark; height is capped so any
+   image fits the nav bar without distorting its aspect ratio. */
+.logo-img {
+  height: calc(40 * var(--s));
+  max-width: calc(190 * var(--s));
+  object-fit: contain;
+  display: block;
+}
+.logo-mark {
+  width: calc(35 * var(--s));
+  height: calc(35 * var(--s));
+  border-radius: calc(8 * var(--s));
+  background: var(--red);
+  color: #fff;
+  font-size: calc(16 * var(--s));
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-text {
+  font-size: calc(19 * var(--s));
+  font-weight: 700;
+  letter-spacing: calc(-0.3 * var(--s));
+  color: #2b2f38;
+}
+.logo-text span { color: var(--red); }
+
+.btn-red {
+  height: calc(44 * var(--s));
+  padding: 0 calc(20 * var(--s));
+  border-radius: calc(8 * var(--s));
+  background: var(--red);
+  color: #fff;
+  font-size: calc(15 * var(--s));
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn-red:hover:not(:disabled) { background: var(--red-dark); }
+
+/* Bill No / KOT No — gently rounded rectangles, 124x40 at 1920. */
+.search-box { position: relative; display: flex; align-items: center; }
+.search-box svg {
+  position: absolute;
+  left: calc(12 * var(--s));
+  width: calc(21 * var(--s));
+  height: calc(21 * var(--s));
+  color: #2b2f38;          /* the magnifier is dark, not grey */
+  pointer-events: none;
+}
+.search-box input {
+  width: calc(124 * var(--s));
+  height: calc(44 * var(--s));   /* same height as the New Order button */
+  padding: 0 calc(12 * var(--s)) 0 calc(39 * var(--s));
+  font-family: inherit;
+  font-size: calc(14 * var(--s));
+  color: var(--text);
+  border: 1px solid #dfe2e6;
+  border-radius: calc(9 * var(--s));
+  outline: none;
+  background: #fff;
+}
+.search-box input:focus { border-color: #c3c8ce; }
+.search-box input::placeholder { color: #9aa0a8; font-weight: 400; }
+
+.nav-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--s));
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(4 * var(--s));
+  padding: calc(5 * var(--s)) calc(9 * var(--s));
+  border-radius: calc(6 * var(--s));
+  color: #2b2f38;
+  font-size: calc(14 * var(--s));
+  font-weight: 400;
+  white-space: nowrap;
+}
+.nav-item:hover { background: #f2f3f5; }
+.nav-item svg {
+  display: block;
+  width: calc(28 * var(--s));
+  height: calc(28 * var(--s));
+}
+
+.btn-help {
+  margin-left: calc(10 * var(--s));
+  height: calc(44 * var(--s));
+  padding: 0 calc(20 * var(--s));
+  border-radius: calc(8 * var(--s));
+  border: 1px solid #f0b8bb;
+  background: var(--red-tint);
+  color: var(--red);
+  font-size: calc(16 * var(--s));
+  font-weight: 400;
+  white-space: nowrap;
+}
+.btn-help:hover { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* ---------------- page bar ---------------- */
+
+.pagebar {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--s));
+  height: calc(58 * var(--s));
+  padding: 0 calc(26 * var(--s));
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.page-title {
+  margin: 0;
+  font-size: calc(25 * var(--s));
+  font-weight: 400;
+  color: #2b2f38;
+}
+
+.pagebar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--s));
+}
+
+/* Add Table / Delivery / Pick Up share one width so the row reads evenly.
+   Sized to the longest label rather than each button hugging its own text. */
+.pagebar-right .btn-red {
+  width: calc(124 * var(--s));
+  padding: 0;
+}
+
+.icon-btn {
+  width: calc(44 * var(--s));
+  height: calc(44 * var(--s));
+  border-radius: calc(6 * var(--s));
+  color: #646464;                 /* their stroke colour on this glyph */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn svg { width: calc(36 * var(--s)); height: calc(36 * var(--s)); }
+.icon-btn:hover { background: #f0f1f3; }
+.icon-btn.spin svg { animation: spin 0.6s linear; }
+
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+/* ---------------- legend ---------------- */
+
+.legendbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: calc(20 * var(--s));
+  padding: calc(20 * var(--s)) calc(26 * var(--s)) calc(18 * var(--s));
+  flex-shrink: 0;
+}
+
+.move-toggle {
+  display: flex;
+  align-items: center;
+  gap: calc(11 * var(--s));
+  height: calc(44 * var(--s));
+  padding: 0 calc(18 * var(--s));
+  border-radius: calc(10 * var(--s));   /* softly rounded, not a full pill */
+  border: none;
+  background: #f0f1f3;
+  font-size: calc(16 * var(--s));
+  font-weight: 400;
+  color: #2b2f38;
+}
+.move-toggle:hover { background: #e7e9ec; }
+
+.toggle-pill {
+  width: calc(40 * var(--s));
+  height: calc(22 * var(--s));
+  border-radius: calc(11 * var(--s));
+  background: #d4d7dc;
+  border: none;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.toggle-pill::after {
+  content: '';
+  position: absolute;
+  top: calc(3 * var(--s));
+  left: calc(3 * var(--s));
+  width: calc(16 * var(--s));
+  height: calc(16 * var(--s));
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.15s;
+}
+.move-toggle.on .toggle-pill { background: #2ec27e; }
+.move-toggle.on .toggle-pill::after { transform: translateX(calc(18 * var(--s))); }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: calc(9 * var(--s));
+  font-size: calc(17 * var(--s));
+  font-weight: 400;
+  color: #2b2f38;
+}
+
+.dot {
+  width: calc(16 * var(--s));
+  height: calc(16 * var(--s));
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot.blank   { background: #eceef0; border: 1px solid #dadde1; }
+.dot.running { background: var(--st-running); }
+.dot.printed { background: var(--st-printed); }
+.dot.paid    { background: var(--st-paid); }
+.dot.runkot  { background: var(--st-runkot); }
+
+/* ---------------- table grid ---------------- */
+
+.tables-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 calc(20 * var(--s)) calc(26 * var(--s));
+}
+
+/* Petpooja's cards are a fixed 113x113 at 1920 with a 22px gap - they do not
+   stretch to fill the row. auto-fill keeps that size and simply fits as many
+   per row as the window allows. */
+.table-grid {
+  display: grid;
+  /* Petpooja: cards are 5.632rem square with 1.875rem/1.125rem gaps, against a
+     20px root font -> 113px cards, 38px row gap, 22px column gap at 1920. */
+  grid-template-columns: repeat(auto-fill, calc(113 * var(--s)));
+  row-gap: calc(38 * var(--s));
+  column-gap: calc(22.9 * var(--s));   /* exactly 14 columns at 1920 */
+}
+
+.table-card {
+  position: relative;
+  width: calc(113 * var(--s));
+  height: calc(113 * var(--s));
+  border-radius: calc(8 * var(--s));
+  /* CSS `dashed` gives no control over dash length and renders almost solid at
+     fractional scale. An inline SVG stroke-dasharray draws the exact pattern
+     Petpooja uses: long dashes with clear gaps. */
+  border: none;
+  /* the shorthand must come first - it would otherwise clear background-image */
+  background-color: var(--st-blank);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' preserveAspectRatio='none' viewBox='0 0 113 125'%3E%3Crect x='0.8' y='0.8' width='111.4' height='123.4' fill='none' rx='9' ry='9' stroke='%23928f8f' stroke-width='1.5' stroke-dasharray='4 3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  color: #2b2f38;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(20 * var(--s));
+  font-weight: 400;
+  transition: box-shadow 0.12s, transform 0.08s;
+}
+.table-card:hover { box-shadow: 0 calc(3 * var(--s)) calc(12 * var(--s)) rgba(0,0,0,0.12); }
+
+.table-card.running,
+.table-card.printed,
+.table-card.paid,
+.table-card.runkot {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /* Measured from Petpooja: the three text lines occupy 68px in a 125px card,
+     sitting 34px below the top edge and 23px above the bottom, with the icon
+     row straddling the bottom border. Centring the block gives that spacing
+     without pushing the last line past the card edge. */
+  /* their a.table-no-section: centred column, 0 0.25rem 5px */
+  padding: 0 calc(4 * var(--s)) calc(5 * var(--s));
+  justify-content: center;
+  font-weight: 400;
+  gap: 0;
+  overflow: visible;
+}
+
+/* Occupied cards use a clear mid tint with dark text, as Petpooja does. */
+.table-card.running { background-color: #89dbff; color: #000; }
+.table-card.printed { background-color: #b8ffb6; color: #000; }
+.table-card.paid    { background-color: #f9d9ab; color: #000; }
+.table-card.runkot  { background-color: #fff88b; color: #000; }
+
+.tc-time { font-size: calc(17.5 * var(--s)); font-weight: 400; line-height: calc(24 * var(--s)); }
+.tc-no   { font-size: calc(17.5 * var(--s)); font-weight: 400; line-height: calc(24 * var(--s)); }
+.tc-amt  { font-size: calc(17.5 * var(--s)); font-weight: 600; line-height: calc(24 * var(--s)); }
+
+/* Action icons straddle the bottom edge of the card, half in and half out,
+   exactly as Petpooja draws them. No button chrome - just the glyph. */
+/* their .tbl-iconWrap: margin-top auto, then pulled up 1rem so the buttons
+   overlap the lower part of the card rather than hanging below it. */
+.tc-actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-20 * var(--s));
+  display: flex;
+  gap: calc(12.5 * var(--s));
+  align-items: center;
+  justify-content: center;
+}
+
+.tc-act {
+  width: calc(40 * var(--s));
+  height: calc(40 * var(--s));
+  padding: 0;
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: calc(5 * var(--s));
+  color: #14171c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tc-act svg {
+  width: calc(28 * var(--s));
+  height: calc(28 * var(--s));
+}
+.tc-act:hover { background: #f2f3f5; }
+
+
+
+/* ---------------- order screen ---------------- */
+
+.order-screen { flex: 1; display: flex; min-height: 0; background: #fff; }
+
+/* --- left: category rail --- */
+
+.cat-rail {
+  width: calc(220 * var(--s));
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  background: #fff;
+}
+
+.cat-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: calc(16 * var(--s)) calc(18 * var(--s));
+  border-bottom: 1px solid #eef0f2;
+  border-left: calc(4 * var(--s)) solid transparent;
+  font-size: calc(15 * var(--s));
+  line-height: 1.35;
+  color: #2b2f38;
+  background: #fff;
+}
+.cat-item:hover { background: #f7f8fa; }
+.cat-item.active {
+  background: var(--red-tint);
+  border-left-color: var(--red);
+  color: var(--red);
+}
+
+/* --- middle: search + item grid --- */
+
+.item-pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+}
+
+.item-search {
+  position: relative;
+  padding: calc(16 * var(--s)) calc(16 * var(--s)) calc(10 * var(--s));
+  flex-shrink: 0;
+}
+.item-search svg {
+  position: absolute;
+  left: calc(30 * var(--s));
+  top: 50%;
+  transform: translateY(-25%);
+  width: calc(20 * var(--s));
+  height: calc(20 * var(--s));
+  color: #6b7280;
+  pointer-events: none;
+}
+.item-search input {
+  width: 100%;
+  height: calc(46 * var(--s));
+  padding: 0 calc(40 * var(--s));
+  font-family: inherit;
+  font-size: calc(16 * var(--s));
+  border: 1px solid #dfe2e6;
+  border-radius: calc(8 * var(--s));
+  outline: none;
+}
+.item-search input:focus { border-color: #c3c8ce; }
+.item-search .clear-search {
+  position: absolute;
+  right: calc(30 * var(--s));
+  top: 50%;
+  transform: translateY(-25%);
+  width: calc(22 * var(--s));
+  height: calc(22 * var(--s));
+  color: #6b7280;
+  font-size: calc(18 * var(--s));
+  line-height: 1;
+}
+
+.item-scroll { flex: 1; overflow-y: auto; padding: calc(6 * var(--s)) calc(16 * var(--s)) calc(20 * var(--s)); }
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: calc(14 * var(--s));
+}
+
+.item-card {
+  min-height: calc(88 * var(--s));
+  padding: calc(12 * var(--s)) calc(12 * var(--s));
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  border-left: calc(3 * var(--s)) solid #2ec27e;   /* veg marker */
+  border-radius: calc(6 * var(--s));
+  font-size: calc(15 * var(--s));
+  line-height: 1.32;
+  color: #2b2f38;
+  display: flex;
+  align-items: flex-start;
+  box-shadow: 0 calc(1 * var(--s)) calc(2 * var(--s)) rgba(0,0,0,0.05);
+}
+.item-card:hover { border-color: #b9c0c8; border-left-color: #2ec27e; }
+.item-card.selected { outline: calc(2 * var(--s)) solid #2f6fd0; outline-offset: calc(-2 * var(--s)); }
+
+/* Once the bill is printed the menu is inert, but the cards keep their normal
+   appearance - Petpooja does not grey them out. */
+.item-card.locked { cursor: default; }
+.item-card.locked:hover { border-color: #e3e6ea; border-left-color: #2ec27e; }
+
+/* --- right: order panel --- */
+
+.order-pane {
+  width: calc(830 * var(--s));
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+}
+
+.mode-tabs { display: flex; flex-shrink: 0; border-bottom: 1px solid var(--line); }
+
+.mode-tab {
+  flex: 1;
+  height: calc(58 * var(--s));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(10 * var(--s));
+  font-size: calc(19 * var(--s));
+  color: #2b2f38;
+  background: #fff;
+}
+.mode-tab svg { width: calc(24 * var(--s)); height: calc(24 * var(--s)); }
+/* The selected tab is underlined in the brand red, matching its text. */
+.mode-tab.active {
+  background: var(--red-tint);
+  color: var(--red);
+  font-weight: 500;
+  box-shadow: inset 0 calc(-2 * var(--s)) 0 var(--red);
+}
+
+.order-iconbar {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  height: calc(62 * var(--s));
+}
+
+.oi-btn {
+  width: calc(92 * var(--s));
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(2 * var(--s));
+  color: #2b2f38;
+}
+.oi-btn svg { width: calc(24 * var(--s)); height: calc(24 * var(--s)); }
+.oi-btn .oi-count { font-size: calc(16 * var(--s)); font-weight: 600; }
+.oi-btn:hover { background: #f7f8fa; }
+
+.oi-spacer { flex: 1; }
+
+.oi-mode {
+  width: calc(96 * var(--s));
+  background: #f5b301;
+  color: #2b2f38;
+  font-size: calc(17 * var(--s));
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--s));
+  padding: calc(12 * var(--s)) calc(18 * var(--s));
+  flex-shrink: 0;
+}
+.table-row label { font-size: calc(17 * var(--s)); color: #2b2f38; }
+.table-row input {
+  width: calc(66 * var(--s));
+  height: calc(38 * var(--s));
+  padding: 0 calc(10 * var(--s));
+  font-family: inherit;
+  font-size: calc(16 * var(--s));
+  text-align: center;
+  border: 1px solid #cfcfcf;
+  border-radius: calc(6 * var(--s));
+  outline: none;
+}
+.view-kot {
+  margin-left: auto;
+  color: #2f6fd0;
+  font-size: calc(17 * var(--s));
+  text-decoration: underline;
+  background: none;
+}
+
+.order-cols {
+  display: flex;
+  align-items: center;
+  padding: calc(10 * var(--s)) calc(18 * var(--s));
+  border-bottom: 1px solid var(--line);
+  font-size: calc(16 * var(--s));
+  color: #2b2f38;
+  flex-shrink: 0;
+}
+.oc-items { flex: 1; text-decoration: underline; }
+.oc-check { width: calc(190 * var(--s)); text-align: center; }
+.oc-qty   { width: calc(150 * var(--s)); text-align: center; }
+.oc-price { width: calc(120 * var(--s)); text-align: right; }
+
+.order-lines { flex: 1; overflow-y: auto; }
+
+.order-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(6 * var(--s));
+  color: #8b919c;
+}
+.order-empty svg { width: calc(74 * var(--s)); height: calc(74 * var(--s)); color: #c9ccd2; }
+.order-empty b { font-size: calc(22 * var(--s)); font-weight: 600; color: #2b2f38; margin-top: calc(14 * var(--s)); }
+.order-empty span { font-size: calc(17 * var(--s)); }
+
+.order-line {
+  display: flex;
+  align-items: center;
+  padding: calc(12 * var(--s)) calc(18 * var(--s));
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.ol-remove {
+  width: calc(26 * var(--s));
+  height: calc(26 * var(--s));
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: calc(15 * var(--s));
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: calc(12 * var(--s));
+}
+
+.ol-name {
+  flex: 1;
+  min-width: 0;
+  font-size: calc(17 * var(--s));
+  color: #2b2f38;
+  text-decoration: underline;
+}
+.ol-name small { display: block; text-decoration: none; color: var(--muted); font-size: calc(13 * var(--s)); }
+
+.ol-check { width: calc(190 * var(--s)); }
+
+.ol-qty {
+  width: calc(150 * var(--s));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(6 * var(--s));
+}
+/* The three qty controls must share one height, so it lives in a single
+   variable and every box uses border-box sizing. */
+.ol-qty button,
+.ol-qty input {
+  height: calc(38 * var(--s));
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #cfcfcf;
+  border-radius: calc(5 * var(--s));
+  background: #fff;
+  color: #2b2f38;
+  font-family: inherit;
+  vertical-align: middle;
+}
+.ol-qty button {
+  width: calc(38 * var(--s));
+  font-size: calc(18 * var(--s));
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ol-qty button:hover { background: #f2f3f5; }
+.ol-qty input {
+  width: calc(56 * var(--s));
+  text-align: center;
+  font-size: calc(16 * var(--s));
+  line-height: normal;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.ol-price {
+  width: calc(120 * var(--s));
+  text-align: right;
+  font-size: calc(19 * var(--s));
+  font-weight: 600;
+  color: #2b2f38;
+}
+.ol-price small { display: block; font-size: calc(14 * var(--s)); font-weight: 400; color: var(--muted); }
+
+/* A billed order drops its remove and quantity controls, so the row keeps its
+   column alignment through a spacer and a plain quantity box. */
+.ol-remove-spacer {
+  width: calc(26 * var(--s));
+  margin-right: calc(12 * var(--s));
+  flex-shrink: 0;
+}
+.ol-qty-static {
+  min-width: calc(56 * var(--s));
+  height: calc(38 * var(--s));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cfcfcf;
+  border-radius: calc(5 * var(--s));
+  font-size: calc(16 * var(--s));
+  color: #2b2f38;
+}
+
+/* --- totals + payment + actions --- */
+
+.order-foot { flex-shrink: 0; border-top: 1px solid var(--line); }
+
+.total-bar {
+  display: flex;
+  align-items: center;
+  padding: calc(12 * var(--s)) calc(18 * var(--s));
+}
+.btn-split {
+  height: calc(42 * var(--s));
+  padding: 0 calc(22 * var(--s));
+  border: 1px solid #cfcfcf;
+  border-radius: calc(6 * var(--s));
+  background: #f7f8fa;
+  font-size: calc(17 * var(--s));
+  color: #2b2f38;
+}
+.total-label { margin-left: auto; font-size: calc(21 * var(--s)); color: #2b2f38; }
+.total-value { margin-left: calc(14 * var(--s)); font-size: calc(28 * var(--s)); font-weight: 700; color: #2b2f38; }
+
+.pay-row {
+  display: flex;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.pay-btn {
+  flex: 1;
+  height: calc(56 * var(--s));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8 * var(--s));
+  border-right: 1px solid var(--line);
+  font-size: calc(17 * var(--s));
+  color: #2b2f38;
+  background: #fff;
+}
+.pay-btn:last-child { border-right: none; }
+.pay-btn svg { width: calc(26 * var(--s)); height: calc(26 * var(--s)); }
+.pay-btn .tick {
+  width: calc(18 * var(--s));
+  height: calc(18 * var(--s));
+  border-radius: 50%;
+  background: #c9ccd2;
+  color: #fff;
+  font-size: calc(11 * var(--s));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pay-btn.active { background: #eafaf1; color: #1f8c5a; }
+.pay-btn.active .tick { background: #2ec27e; }
+
+.paid-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(9 * var(--s));
+  padding: calc(11 * var(--s));
+  font-size: calc(17 * var(--s));
+  color: #2b2f38;
+}
+.paid-row input { width: calc(17 * var(--s)); height: calc(17 * var(--s)); cursor: pointer; }
+
+.action-row {
+  display: flex;
+  gap: calc(10 * var(--s));
+  padding: calc(12 * var(--s)) calc(16 * var(--s)) calc(16 * var(--s));
+}
+.act-btn {
+  flex: 1;
+  height: calc(48 * var(--s));
+  border-radius: calc(7 * var(--s));
+  background: var(--red);
+  color: #fff;
+  font-size: calc(17 * var(--s));
+  font-weight: 500;
+  white-space: nowrap;
+}
+.act-btn:hover:not(:disabled) { background: var(--red-dark); }
+.act-btn.dark { background: #3d4450; }
+.act-btn.dark:hover:not(:disabled) { background: #2b313b; }
+
+/* Hold is an outlined button in Petpooja, not a filled one. */
+/* Billed state: Settle & Save sits centred above "It's Paid", with Print and
+   EBill on the row beneath. */
+.action-row:has(.settle-save) { flex-direction: column; gap: calc(10 * var(--s)); }
+
+.act-btn.settle-save {
+  flex: none;
+  align-self: center;
+  height: calc(42 * var(--s));
+  min-width: calc(160 * var(--s));
+  padding: 0 calc(24 * var(--s));
+  font-size: calc(16 * var(--s));
+}
+
+.paid-row.inline { padding: calc(4 * var(--s)) 0; }
+
+/* Print / EBill sit below a divider, matching Petpooja's layout. */
+.billed-row {
+  display: flex;
+  gap: calc(12 * var(--s));
+  justify-content: center;
+  width: 100%;
+  padding-top: calc(12 * var(--s));
+  border-top: 1px solid var(--line);
+}
+.billed-row .act-btn {
+  flex: none;
+  height: calc(42 * var(--s));
+  min-width: calc(112 * var(--s));
+  font-size: calc(16 * var(--s));
+}
+
+.act-btn.ghost {
+  background: #fff;
+  color: #2b2f38;
+  border: 1px solid #c9ccd2;
+}
+.act-btn.ghost:hover:not(:disabled) { background: #f2f3f5; }
+
+/* --- variant chooser --- */
+
+.variant-grid { display: flex; gap: calc(14 * var(--s)); flex-wrap: wrap; }
+.variant-btn {
+  width: calc(198 * var(--s));
+  height: calc(84 * var(--s));
+  padding: 0;
+  background: #3d4450;
+  color: #fff;
+  text-align: center;
+  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(3 * var(--s));
+}
+.variant-btn b { font-size: calc(18 * var(--s)); font-weight: 600; }
+.variant-btn span { font-size: calc(17 * var(--s)); }
+.variant-btn.active { background: var(--red); }
+.variant-label {
+  font-size: calc(19 * var(--s));
+  font-weight: 600;
+  margin: 0 0 calc(18 * var(--s));
+  color: #2b2f38;
+}
+
+/* ---------------- modal ---------------- */
+
+/* Shared modal button. The order-screen rewrite dropped these, leaving every
+   dialog button unstyled - they are restored here. */
+.btn {
+  height: calc(49 * var(--s));
+  padding: 0 calc(26 * var(--s));
+  border-radius: calc(7 * var(--s));
+  background: var(--red);
+  color: #fff;
+  font-size: calc(17 * var(--s));
+  font-weight: 500;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { filter: brightness(0.93); }
+.btn.green { background: #2ec27e; }
+.btn.amber { background: #eba640; }
+.btn.grey  { background: #8b919c; }
+.btn.wide  { width: 100%; }
+/* Cancel in the variation dialog is plain text, not a filled button. */
+.btn.plain {
+  background: #fff;
+  color: #2b2f38;
+  border: 1px solid #c9ccd2;
+}
+.btn.plain:hover:not(:disabled) { background: #f2f3f5; filter: none; }
+
+
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(25,28,34,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  padding: calc(24 * var(--s));
+}
+
+.modal {
+  background: var(--panel);
+  border-radius: calc(10 * var(--s));
+  box-shadow: 0 calc(18 * var(--s)) calc(50 * var(--s)) rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: calc(500 * var(--s));
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal.wide { max-width: calc(620 * var(--s)); }
+
+/* the variation chooser is a wide dialog: 1000x402 at 1920 */
+.modal.variation { max-width: calc(1000 * var(--s)); }
+
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(14 * var(--s)) calc(17 * var(--s));
+  border-bottom: 1px solid var(--line);
+  font-size: calc(16 * var(--s));
+  font-weight: 700;
+}
+/* the variation dialog has a taller header and a lighter title */
+.modal.variation .modal-head {
+  height: calc(66 * var(--s));
+  padding: 0 calc(30 * var(--s));
+  font-size: calc(21 * var(--s));
+  font-weight: 500;
+}
+.modal.variation .modal-body { padding: calc(26 * var(--s)) calc(30 * var(--s)); }
+.modal.variation .modal-foot { padding: calc(20 * var(--s)) calc(30 * var(--s)); }
+.modal-close { font-size: calc(21 * var(--s)); line-height: 1; color: var(--muted); padding: calc(2 * var(--s)) calc(6 * var(--s)); }
+.modal-close:hover { color: var(--red); }
+
+.modal-body { padding: calc(17 * var(--s)); overflow-y: auto; }
+.modal-foot {
+  display: flex; gap: calc(8 * var(--s)); justify-content: flex-end;
+  padding: calc(12 * var(--s)) calc(17 * var(--s));
+  border-top: 1px solid var(--line);
+}
+.modal-foot .btn { min-width: calc(130 * var(--s)); }
+
+/* The receipt preview renders the real 80mm document in an iframe, sitting on
+   a grey ground so the paper edge is visible. */
+.receipt-paper {
+  background: #e8eaed;
+  padding: calc(14 * var(--s));
+  border-radius: calc(6 * var(--s));
+  display: flex;
+  justify-content: center;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.receipt-paper iframe {
+  width: 302px;              /* 80mm at 96dpi */
+  /* srcDoc frames cannot report their content height without same-origin
+     access, so the frame is given a fixed tall canvas and scrolls itself. */
+  height: 55vh;
+  border: none;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+}
+
+.receipt-preview {
+  margin: 0;
+  padding: calc(14 * var(--s));
+  background: #fbfbfb;
+  border: 1px solid var(--line);
+  border-radius: calc(8 * var(--s));
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: calc(13 * var(--s));
+  line-height: 1.45;
+  white-space: pre;
+  overflow-x: auto;
+  color: #1a1a1a;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.pay-modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(8 * var(--s)); margin-bottom: calc(16 * var(--s)); }
+.pay-mode {
+  padding: calc(15 * var(--s));
+  border-radius: calc(8 * var(--s));
+  border: calc(2 * var(--s)) solid var(--line);
+  background: #fff;
+  font-size: calc(15 * var(--s));
+  font-weight: 700;
+  color: var(--text);
+}
+.pay-mode:hover { border-color: var(--red); }
+.pay-mode.active { border-color: var(--st-printed); background: #eafaf1; color: #1f8c5a; }
+
+.settle-total {
+  text-align: center;
+  padding: calc(15 * var(--s));
+  margin-bottom: calc(16 * var(--s));
+  background: #f6f7f9;
+  border-radius: calc(8 * var(--s));
+}
+.settle-total small { display: block; color: var(--muted); font-size: calc(13 * var(--s)); margin-bottom: calc(4 * var(--s)); }
+.settle-total b { font-size: calc(32 * var(--s)); }
+
+.field { margin-bottom: calc(15 * var(--s)); }
+.field label {
+  display: block;
+  font-size: calc(12.5 * var(--s));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: calc(0.5 * var(--s));
+  color: var(--muted);
+  margin-bottom: calc(6 * var(--s));
+}
+.field select, .field input[type="number"] {
+  width: 100%;
+  height: calc(38 * var(--s));
+  padding: 0 calc(11 * var(--s));
+  font-size: calc(14 * var(--s));
+  font-family: inherit;
+  border: 1px solid #cfcfcf;
+  border-radius: calc(8 * var(--s));
+  background: #fff;
+  outline: none;
+}
+.field select:focus, .field input:focus { border-color: var(--red); }
+
+.check-row { display: flex; align-items: center; gap: calc(9 * var(--s)); margin-bottom: calc(10 * var(--s)); font-size: calc(14 * var(--s)); }
+.check-row input { width: calc(17 * var(--s)); height: calc(17 * var(--s)); cursor: pointer; }
+
+/* Inline result of a test print - toasts are disabled, so this is the only
+   feedback the counter gets. */
+.print-result {
+  margin: calc(10 * var(--s)) 0 0;
+  padding: calc(10 * var(--s)) calc(12 * var(--s));
+  border-radius: calc(6 * var(--s));
+  font-size: calc(14 * var(--s));
+  line-height: 1.5;
+}
+.print-result.ok  { background: #eafaf1; color: #1f8c5a; }
+.print-result.err { background: #fdeeef; color: var(--red-dark); }
+.hint code { font-size: calc(12 * var(--s)); word-break: break-all; color: #5a6069; }
+
+.hint { font-size: calc(13 * var(--s)); color: var(--muted); line-height: 1.6; margin: calc(8 * var(--s)) 0 0; }
+
+/* ---------------- toast ---------------- */
+
+.toast-stack {
+  position: fixed;
+  right: calc(18 * var(--s));
+  bottom: calc(18 * var(--s));
+  display: flex;
+  flex-direction: column;
+  gap: calc(8 * var(--s));
+  z-index: 200;
+}
+.toast {
+  min-width: calc(280 * var(--s));
+  max-width: calc(400 * var(--s));
+  padding: calc(12 * var(--s)) calc(15 * var(--s));
+  border-radius: calc(8 * var(--s));
+  background: #2b2f38;
+  color: #fff;
+  font-size: calc(14 * var(--s));
+  line-height: 1.5;
+  box-shadow: 0 calc(6 * var(--s)) calc(20 * var(--s)) rgba(0,0,0,0.28);
+  border-left: calc(4 * var(--s)) solid var(--red);
+}
+.toast.ok   { border-left-color: var(--st-printed); }
+.toast.warn { border-left-color: #eba640; }
+.toast.err  { border-left-color: var(--red); }
+
+::-webkit-scrollbar { width: calc(10 * var(--s)); height: calc(10 * var(--s)); }
+::-webkit-scrollbar-track { background: #f2f3f5; }
+::-webkit-scrollbar-thumb { background: #c9ccd2; border-radius: calc(5 * var(--s)); }
+::-webkit-scrollbar-thumb:hover { background: #adb2ba; }
+
+/* ---------------- reports ---------------- */
+
+.reports {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #f7f8fa;
+}
+
+.rep-bar {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--s));
+  height: calc(58 * var(--s));
+  padding: 0 calc(22 * var(--s));
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.rep-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--s));
+}
+
+.rep-label {
+  font-size: calc(14 * var(--s));
+  color: var(--muted);
+}
+
+.rep-date,
+.rep-select {
+  height: calc(38 * var(--s));
+  padding: 0 calc(10 * var(--s));
+  font-family: inherit;
+  font-size: calc(14 * var(--s));
+  color: var(--text);
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  border-radius: calc(7 * var(--s));
+  outline: none;
+}
+.rep-select { max-width: calc(220 * var(--s)); }
+
+.rep-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: calc(20 * var(--s)) calc(22 * var(--s)) calc(40 * var(--s));
+}
+
+.rep-daylabel {
+  display: flex;
+  align-items: baseline;
+  gap: calc(12 * var(--s));
+  font-size: calc(20 * var(--s));
+  font-weight: 600;
+  color: #2b2f38;
+  margin-bottom: calc(16 * var(--s));
+}
+.rep-window {
+  font-size: calc(13 * var(--s));
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* headline figures */
+.rep-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(220 * var(--s)), 1fr));
+  gap: calc(14 * var(--s));
+  margin-bottom: calc(26 * var(--s));
+}
+
+.rep-card {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--s));
+  padding: calc(16 * var(--s)) calc(18 * var(--s));
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: calc(9 * var(--s));
+}
+.rc-label { font-size: calc(13 * var(--s)); color: var(--muted); }
+.rc-value { font-size: calc(26 * var(--s)); font-weight: 600; color: #12161c; }
+.rc-sub   { font-size: calc(12.5 * var(--s)); color: var(--muted); }
+
+.rep-heading {
+  display: flex;
+  align-items: baseline;
+  gap: calc(10 * var(--s));
+  margin: 0 0 calc(12 * var(--s));
+  font-size: calc(18 * var(--s));
+  font-weight: 600;
+  color: #2b2f38;
+}
+.rep-note { font-size: calc(12.5 * var(--s)); font-weight: 400; color: var(--muted); }
+
+.rep-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: calc(9 * var(--s));
+  overflow: hidden;
+  font-size: calc(14 * var(--s));
+}
+.rep-table thead td {
+  padding: calc(10 * var(--s)) calc(12 * var(--s));
+  background: #f2f3f5;
+  font-size: calc(12.5 * var(--s));
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.rep-table tbody td {
+  padding: calc(9 * var(--s)) calc(12 * var(--s));
+  border-bottom: 1px solid #f0f1f3;
+}
+.rep-table tbody tr:last-child td { border-bottom: none; }
+
+.rt-rank { width: calc(44 * var(--s)); color: var(--muted); }
+.rt-qty  { width: calc(70 * var(--s)); text-align: right; }
+.rt-amt  { width: calc(120 * var(--s)); text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* a bar makes the mix readable at a glance without a chart library */
+.rt-bar { width: 28%; }
+.rt-fill {
+  display: block;
+  height: calc(8 * var(--s));
+  border-radius: calc(4 * var(--s));
+  background: var(--red);
+  opacity: 0.75;
+  min-width: calc(2 * var(--s));
+}

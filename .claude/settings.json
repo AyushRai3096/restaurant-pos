@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 - /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/tb/tb_view_template.js)",
+      "Bash(python3 - /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/kb/site_functions.js)",
+      "Bash(python3 - /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/scss/main.css)",
+      "Bash(node -e ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 - /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/kb/kb_view_billing_screen.js)",
+      "Bash(python3 - /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/kb/templates_inner.js)",
+      "Bash(python3 - /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/kb/kb_view_inner.js)",
+      "Bash(npx --yes esbuild src/ui/VariantModal.jsx --outfile=/dev/null)",
+      "Bash(npx --yes esbuild \"/Users/ayushrai/Petpooja Clone/src/ui/OrderScreen.jsx\" --outfile=/dev/null)",
+      "Bash(sed -n \"/const handleKot/,/^    }\\);/p\" src/ui/OrderScreen.jsx)",
+      "Bash(sed -n \"/handle\\('kot:save'/,/^  }\\);/p\" src/main/ipc.js)",
+      "Bash(grep -nB3 -A6 'category.*active\\\\|cat-list.*active\\\\|menu-cat.*active' /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/scss/main.css)",
+      "Bash(grep -rhoE 'color-prim[a-zA-Z-]*:[^;]{0,40}' /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public)",
+      "Bash(grep -oE '\\(prim_light|primary|prim_dark\\)[^,;}]{0,40}' /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/common/theme-init.js)",
+      "Bash(grep -oE 'primaryLight[^,;}]{0,50}|primary\\\\s*:\\\\s*[^,;}]{0,40}|APP_THEME\\\\s*=\\\\s*\\\\{[^}]{0,300}' /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/common/theme-init.js)",
+      "Read(//Users/ayushrai/Downloads/**)",
+      "Bash(rm -rf pp)",
+      "Bash(mkdir -p pp)",
+      "Bash(npx --yes @electron/asar extract \"/Users/ayushrai/Downloads/petpooja asar file.asar\" pp)",
+      "Bash(npx --yes esbuild src/ui/Toasts.jsx src/ui/App.jsx src/ui/OrderScreen.jsx --outdir=/tmp/esb2)",
+      "Bash(node --input-type=module -e ' *)",
+      "Bash(SP=/private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad *)",
+      "Bash(python3 /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/convert.py '/Users/ayushrai/Downloads/Table Menu Veerji - Sheet1.csv' /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/menu.csv)",
+      "Bash(python3 - /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/menu.csv)",
+      "Bash(npx --yes esbuild src/ui/ReceiptModal.jsx src/ui/App.jsx --outdir=/tmp/esb3)",
+      "Bash(npx --yes esbuild src/ui/ReceiptModal.jsx --outfile=/dev/null)",
+      "Bash(npx --yes esbuild src/main/printer.js --outfile=/dev/null)",
+      "Bash(npx --yes esbuild src/ui/PrinterSettings.jsx --outfile=/dev/null)",
+      "Bash(grep -rn 'ctrl+r\\\\|ctrlKey.*82\\\\|keyCode == 82\\\\|'\\\\''r'\\\\''' __TRACKED_VAR__/public/js/tb/tb_view_template.js)",
+      "Bash(grep -ohE '>[A-Z][A-Za-z /&\\(\\)]{3,34}<' /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pp/public/js/tb/tb_view_report.js)",
+      "Bash(npx --yes esbuild src/ui/App.jsx --outfile=/dev/null)",
+      "Bash(npx --yes esbuild src/main/assets.js --outfile=/dev/null)",
+      "Bash(grep -v \"^\\\\.$\\\\|^\\\\.\\\\.$\\\\|node_modules\")",
+      "Bash(npx --yes esbuild src/main/db.js src/main/menu.js src/main/ipc.js --outdir=/tmp/esb5)",
+      "Bash(git rm *)",
+      "Bash(git add *)"
+    ]
+  }
+}
