@@ -37,7 +37,23 @@
       "Bash(grep -v \"^\\\\.$\\\\|^\\\\.\\\\.$\\\\|node_modules\")",
       "Bash(npx --yes esbuild src/main/db.js src/main/menu.js src/main/ipc.js --outdir=/tmp/esb5)",
       "Bash(git rm *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git -c user.name=\"ayushrai\" -c user.email=\"ayushrai3096@gmail.com\" commit -q -F -)",
+      "Bash(git -c user.name=\"ayushrai\" log --oneline -1)",
+      "Bash(gh auth *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(timeout 90 git push -u origin main)",
+      "Bash(git push *)",
+      "Bash(npm run *)",
+      "Bash(rm -rf out)",
+      "Bash(echo \"started in background, pid $!\")",
+      "Bash(rm -rf /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pkgtest)",
+      "Bash(mkdir -p /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pkgtest)",
+      "Bash(rsync -a --exclude node_modules --exclude .git --exclude .vite --exclude out ./ /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pkgtest/)",
+      "Bash(cp -R node_modules /private/tmp/claude-501/-Users-ayushrai-Petpooja-Clone/d6f28763-cd7c-4218-ad33-8d7e52ee5ea6/scratchpad/pkgtest/node_modules)",
+      "Bash(node --unhandled-rejections=strict -e ' *)",
+      "Bash(echo \"shell saw exit=$?\")"
     ]
   }
 }
