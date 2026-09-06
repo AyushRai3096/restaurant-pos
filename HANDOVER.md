@@ -1,0 +1,108 @@
+# Handover
+
+Context that is not obvious from the code, for anyone picking this up — including
+a fresh Claude Code session. Read `README.md` first for the architecture; this
+file covers decisions, conventions and open threads.
+
+## What this is
+
+A Windows desktop POS for restaurant table service, modelled closely on the UI
+of an existing product so staff need no retraining. Built for one outlet:
+**Veer Ji Malai Chaap Wale, Paschim Vihar**.
+
+## Working conventions
+
+**Match by measurement, not by eye.** Nearly every visual bug in this project
+came from adjusting values by feel. When something looks wrong, measure it from
+a screenshot or read the value out of the reference stylesheet. Several rounds
+were wasted redrawing an icon that turned out to be a completely different glyph,
+and a whole afternoon on spacing that was wrong because the window was 1440px
+while the reference screenshots were 1920px.
+
+**Trace, do not guess, when matching an icon.** Find the element in the markup,
+follow it to the function that renders it, and take that path. Guessing from the
+name is how `poss_icon_refresh` got used when the screen actually calls
+`poss_icon_check_for_update`.
+
+**One scale variable.** Every size in `src/index.css` is written in the reference
+UI's own pixel units and multiplied by `--s`:
+
+```css
+height: calc(62 * var(--s));   /* 62px in the reference design */
+```
+
+`--s: calc(1vw / 19.2)` — so 1 unit is one pixel at 1920px wide, and the layout
+keeps its proportions at any window size. Never hardcode a px value.
+
+**Third-party brand assets stay out.** The reference app's logo, and Zomato's and
+Swiggy's marks, are trademarks. They are gitignored and the UI falls back to
+letter tiles. Supply your own at `src/ui/assets/{zomato,swiggy}.png` and
+`~/…/Restaurant POS/logo.png` if you want them locally.
+
+## Decisions worth knowing
+
+**An order is a list of KOTs, not a list of items.** This is the core of the data
+model and makes "print only the new items" fall out naturally. The bill is
+derived by grouping every `kot_item`, so it can never drift from what the kitchen
+actually received.
+
+**Menu prices include GST.** A ₹40 naan is ₹38.10 taxable + ₹1.90 tax. Each line
+is rounded to paise **first**, then summed — dividing the gross total instead
+loses a paisa against the real printed receipts.
+
+**Trading day is 09:00–05:00**, so it crosses midnight. `business_day` is stamped
+on every order at creation. Reports group on that column, never `created_at`.
+
+**Availability is keyed by item name**, not id. The menu is a CSV that can be
+re-edited, so ids would break the moment rows moved.
+
+**`kot_number = 0`** holds items saved without firing a KOT — the plain "Save"
+action. It is excluded from KOT counts, so such a table shows as *Running* (blue)
+rather than *Running KOT* (yellow).
+
+**Previews are development-only.** `IS_DEV = !app.isPackaged` in
+`src/main/printer.js`. A packaged build sends `preview: null` and prints
+directly — it is not a setting someone can switch on at the counter.
+
+## Traps already hit
+
+Each of these cost real time. They will not be obvious from reading the code.
+
+- **CSP blocks silently.** `data:` URIs, fonts and iframes each needed an
+  explicit directive in `index.html`. A blocked resource throws nothing — it just
+  does not appear.
+- **`stroke-width` in CSS loses to an SVG's own attribute.** Change the icon
+  component, not the stylesheet.
+- **`display: flex` on a `<td>`** removes it from the table layout, so collapsed
+  borders break either side of it. Put the flexbox in a wrapper inside the cell.
+- **`background:` shorthand after `background-image:`** erases the image.
+- **A migration's `CREATE INDEX` must run after its `ALTER TABLE`**, not in the
+  main schema block. Fresh installs pass; upgrades crash.
+- **An effect like `if (!category)`** fights the user when `''` is a valid choice.
+  Use `=== null` for "not chosen yet".
+- **Electron's default menu owns Ctrl/Cmd+R.** It is removed in `src/main.js`;
+  without that the reports shortcut just reloads the window.
+
+## State of play
+
+**Working:** table grid with five states, order screen with variants, all six
+action buttons, billed/settled flow, KOT and bill templates, sales report,
+item on/off, store on/off panel, business-day logic, menu from CSV.
+
+**Presentation only:** Online/Offline and platform tabs, Logistics, Quick Section
+Controller, Export Excel, Print (on the report), Action column, checkboxes,
+Split, "It's Paid", most nav items.
+
+**Not started:** packaging to `.exe`, real thermal-printer testing, Addon On/Off,
+Live View, Orders, Recent, Hold, Alerts.
+
+## Immediate next steps
+
+1. **`npm run make`** — never successfully run. Packaging failed on macOS for
+   environment reasons (the packager's extraction subprocess dies silently); it
+   should work natively on Windows. Watch for `better-sqlite3` needing
+   `npx electron-rebuild -f -w better-sqlite3`.
+2. **Test printing on the real thermal printer.** Templates are in
+   `src/main/receipt.js`, sized for 80mm. Pick the printer from the hamburger
+   menu, then Test Print. This is the one thing never verified.
+3. **Clone to a path without spaces** — `node-gyp` struggles with them on Windows.

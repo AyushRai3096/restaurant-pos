@@ -174,3 +174,31 @@ export function loadMenu() {
     return { menu: BUNDLED_MENU, source: 'fallback', file, error: err.message };
   }
 }
+
+/* ---------------------------------------------------------- availability -- */
+
+/**
+ * Items switched off are stored by name in the `item_off` table. Anything not
+ * listed there is available, so a fresh install has every item on without
+ * needing a row per item.
+ */
+export function offItems(db) {
+  return new Set(db.prepare('SELECT item_name FROM item_off').all().map((r) => r.item_name));
+}
+
+export function setItemOff(db, itemName, off) {
+  if (off) {
+    db.prepare('INSERT OR IGNORE INTO item_off (item_name) VALUES (?)').run(itemName);
+  } else {
+    db.prepare('DELETE FROM item_off WHERE item_name = ?').run(itemName);
+  }
+}
+
+/** Switches every item in a category on or off in one go. */
+export function setCategoryOff(db, category, off, menu) {
+  const names = menu.filter((m) => m.category === category).map((m) => m.name);
+  const run = db.transaction(() => {
+    for (const name of names) setItemOff(db, name, off);
+  });
+  run();
+}

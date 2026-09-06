@@ -1,30 +1,36 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { IconSearch } from './Icons';
+import DatePicker from './DatePicker';
 
 /**
- * Sales for one business day.
+ * Order Report for one business day.
  *
- * A business day runs 09:00 to 05:00 the next morning, so the figures here are
- * grouped by `business_day` rather than by calendar date - a sale rung up at
- * 01:30 belongs to the previous evening's trading.
+ * A business day runs 09:00 to 05:00 the next morning, so figures are grouped
+ * by `business_day` rather than calendar date — a sale at 01:30 belongs to the
+ * previous evening's trading.
  *
- * Settled and open takings are kept apart on purpose: money collected and money
- * still sitting on live tables are different things to a manager mid-service.
+ * Rows are only rendered for data the app actually records. Payment types that
+ * do not exist yet are absent rather than shown as 0.00, which would read as a
+ * real figure of zero.
  */
 export default function ReportsScreen({ onClose, push }) {
-  const [days, setDays] = useState([]);
-  const [day, setDay] = useState(null);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  // 'from' | 'to' | null - which field the picker is open for
+  const [picking, setPicking] = useState(null);
 
   const load = useCallback(
-    async (businessDay) => {
+    async (day) => {
       setLoading(true);
       try {
-        const data = businessDay
-          ? await window.api.getDayReport(businessDay)
+        const data = day
+          ? await window.api.getDayReport(day)
           : await window.api.getTodayReport();
         setReport(data);
-        setDay(data.businessDay);
+        setFrom(data.businessDay);
+        setTo(data.businessDay);
       } catch (err) {
         push(err.message, 'err');
       } finally {
@@ -35,60 +41,75 @@ export default function ReportsScreen({ onClose, push }) {
   );
 
   useEffect(() => {
-    window.api.getReportDays().then(setDays).catch(() => {});
     load();
   }, [load]);
 
-  const money = (n) => `₹${Number(n || 0).toFixed(2)}`;
+  const shiftDay = (days) => {
+    const [y, m, d] = (from || '').split('-').map(Number);
+    if (!y) return;
+    const dt = new Date(y, m - 1, d + days);
+    const p = (n) => String(n).padStart(2, '0');
+    load(`${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`);
+  };
 
-  const label = useMemo(() => {
-    if (!day) return '';
-    const [y, m, d] = day.split('-').map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString('en-IN', {
-      weekday: 'short',
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  }, [day]);
+  const money = (n) => Number(n || 0).toFixed(2);
 
-  const topItems = report?.items ?? [];
-  const maxAmount = topItems.length ? topItems[0].amount : 0;
+  // The pickers store ISO dates but display them the way the report reads.
+  const fmtDate = (v) => {
+    if (!v) return '';
+    const [y, m, d] = v.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const heading = (() => {
+    if (!report) return '';
+    const [y, m, d] = report.businessDay.split('-');
+    return `${d}-${m}-${y}`;
+  })();
 
   return (
     <div className="reports">
-      <div className="rep-bar">
-        <h1 className="page-title">Sales Report</h1>
+      {/* No close button - Escape closes the screen, as it does elsewhere. */}
+      <div className="rep-title">
+        <h1>Order Report</h1>
+      </div>
 
-        <div className="rep-controls">
-          <label className="rep-label">Business day</label>
-          <input
-            type="date"
-            className="rep-date"
-            value={day || ''}
-            onChange={(e) => e.target.value && load(e.target.value)}
-          />
-
-          <select
-            className="rep-select"
-            value={day || ''}
-            onChange={(e) => load(e.target.value)}
-          >
-            {days.length === 0 && <option value="">No trading days yet</option>}
-            {days.map((d) => (
-              <option key={d.day} value={d.day}>
-                {d.day} — {d.orders} order{d.orders === 1 ? '' : 's'}
-              </option>
-            ))}
-          </select>
-
-          <button className="btn-red" onClick={() => load()}>
-            Today
+      <div className="rep-toolbar">
+        <button className="rep-tool">
+          <IconSearch /> Search
+        </button>
+        <div className="rep-tool-right">
+          <button className="rep-chip" onClick={() => shiftDay(-1)}>
+            Yesterday Orders
           </button>
-          <button className="back-btn" onClick={onClose}>
-            Close
+          <button className="rep-chip" onClick={() => load()}>
+            Today Orders
           </button>
         </div>
+      </div>
+
+      <div className="rep-filters">
+        <div className="rep-field">
+          <span>From</span>
+          <button className="rep-date" onClick={() => setPicking('from')}>
+            {fmtDate(from)}
+          </button>
+        </div>
+        <div className="rep-field">
+          <span>To</span>
+          <button className="rep-date" onClick={() => setPicking('to')}>
+            {fmtDate(to)}
+          </button>
+        </div>
+        <button className="btn-red rep-search" onClick={() => load(from)}>
+          Search
+        </button>
+      </div>
+
+      {/* Presentation only for now - neither button does anything yet. */}
+      <div className="rep-actions">
+        <button className="rep-chip">Export Excel</button>
+        <button className="rep-chip">Print</button>
       </div>
 
       <div className="rep-body">
@@ -96,81 +117,107 @@ export default function ReportsScreen({ onClose, push }) {
 
         {!loading && report && (
           <>
-            <div className="rep-daylabel">
-              {label}
-              <span className="rep-window">
-                trading 09:00 — 05:00 next morning
-              </span>
+            <div className="rep-sheet-head">
+              <strong>Order Summary Report</strong> - {heading}
             </div>
 
-            <div className="rep-cards">
-              <div className="rep-card">
-                <span className="rc-label">Settled sales</span>
-                <span className="rc-value">{money(report.settled?.total)}</span>
-                <span className="rc-sub">
-                  {report.settled?.count ?? 0} order
-                  {report.settled?.count === 1 ? '' : 's'}
-                </span>
-              </div>
+            <div className="rep-section">Order Status</div>
+            <table className="rep-grid">
+              <thead>
+                <tr>
+                  <td>Order Status</td>
+                  <td className="num">My Amount (₹)</td>
+                  <td className="num">Total (₹)</td>
+                  <td className="num">Orders</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Saved:</td>
+                  <td className="num">{money(report.status.saved.gross)}</td>
+                  <td className="num">{money(report.status.saved.total)}</td>
+                  <td className="num">{report.status.saved.count}</td>
+                </tr>
+                <tr>
+                  <td>Printed:</td>
+                  <td className="num">{money(report.status.printed.gross)}</td>
+                  <td className="num">{money(report.status.printed.total)}</td>
+                  <td className="num">{report.status.printed.count}</td>
+                </tr>
+                {/* The app has no cancel, complimentary or sales-return flow
+                    yet, so these are always zero. They are shown so the report
+                    reads the same as the one it replaces. */}
+                <tr>
+                  <td>Cancelled:</td>
+                  <td className="num">0.00</td>
+                  <td className="num">0.00</td>
+                  <td className="num">0</td>
+                </tr>
+                <tr>
+                  <td>Complimentary:</td>
+                  <td className="num">0.00</td>
+                  <td className="num">0.00</td>
+                  <td className="num">0</td>
+                </tr>
+                <tr>
+                  <td>Sales Return:</td>
+                  <td className="num">0.00</td>
+                  <td className="num">0.00</td>
+                  <td className="num">0</td>
+                </tr>
+                <tr className="total-row-grid">
+                  <td>Total:</td>
+                  <td className="num">{money(report.grand.gross)}</td>
+                  <td className="num">{money(report.grand.total)}</td>
+                  <td className="num">{report.grand.count}</td>
+                </tr>
+              </tbody>
+            </table>
 
-              <div className="rep-card">
-                <span className="rc-label">Open tables</span>
-                <span className="rc-value">{money(report.open?.total)}</span>
-                <span className="rc-sub">
-                  {report.open?.count ?? 0} still running
-                </span>
-              </div>
-
-              <div className="rep-card">
-                <span className="rc-label">Taxable value</span>
-                <span className="rc-value">{money(report.subTotal)}</span>
-                <span className="rc-sub">before GST</span>
-              </div>
-
-              <div className="rep-card">
-                <span className="rc-label">GST collected</span>
-                <span className="rc-value">
-                  {money((report.cgst || 0) + (report.sgst || 0))}
-                </span>
-                <span className="rc-sub">
-                  CGST {money(report.cgst)} · SGST {money(report.sgst)}
-                </span>
-              </div>
+            <div className="rep-section">
+              Success Orders ({report.settledCount})
             </div>
+            {/* Every payment type is listed, so the table always renders -
+                rows with no feature behind them simply read 0.00. */}
+            <table className="rep-grid">
+              <thead>
+                <tr>
+                  <td>Payment Type</td>
+                  <td className="num">Total (₹)</td>
+                </tr>
+              </thead>
+              <tbody>
+                {report.payments.map((p) => (
+                  <tr key={p.mode}>
+                    <td>{p.mode}:</td>
+                    <td className="num">{money(p.total)}</td>
+                  </tr>
+                ))}
+                <tr className="total-row-grid">
+                  <td>Total:</td>
+                  <td className="num">{money(report.settledTotal)}</td>
+                </tr>
+              </tbody>
+            </table>
 
-            <h2 className="rep-heading">
-              Items sold
-              <span className="rep-note">settled orders only</span>
-            </h2>
-
-            {topItems.length === 0 ? (
-              <div className="empty-note">Nothing settled on this day yet.</div>
+            <div className="rep-section">Items Sold</div>
+            {report.items.length === 0 ? (
+              <div className="empty-note">No items settled on this day.</div>
             ) : (
-              <table className="rep-table">
+              <table className="rep-grid">
                 <thead>
                   <tr>
-                    <td className="rt-rank">#</td>
                     <td>Item</td>
-                    <td className="rt-qty">Qty</td>
-                    <td className="rt-amt">Amount</td>
-                    <td className="rt-bar" />
+                    <td className="num">Qty</td>
+                    <td className="num">Total (₹)</td>
                   </tr>
                 </thead>
                 <tbody>
-                  {topItems.map((it, i) => (
+                  {report.items.map((it) => (
                     <tr key={it.name}>
-                      <td className="rt-rank">{i + 1}</td>
                       <td>{it.name}</td>
-                      <td className="rt-qty">{it.qty}</td>
-                      <td className="rt-amt">{money(it.amount)}</td>
-                      <td className="rt-bar">
-                        <span
-                          className="rt-fill"
-                          style={{
-                            width: maxAmount ? `${(it.amount / maxAmount) * 100}%` : 0,
-                          }}
-                        />
-                      </td>
+                      <td className="num">{it.qty}</td>
+                      <td className="num">{money(it.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -179,6 +226,18 @@ export default function ReportsScreen({ onClose, push }) {
           </>
         )}
       </div>
+
+      {picking && (
+        <DatePicker
+          value={picking === 'from' ? from : to}
+          onPick={(day) => {
+            if (picking === 'from') setFrom(day);
+            else setTo(day);
+            setPicking(null);
+          }}
+          onClose={() => setPicking(null)}
+        />
+      )}
     </div>
   );
 }

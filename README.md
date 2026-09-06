@@ -24,6 +24,9 @@ npm run make
 Produces a Windows installer in `out/`. `better-sqlite3` is a native module and
 is rebuilt for the target automatically.
 
+New to this codebase? Read `HANDOVER.md` — it covers the decisions, conventions
+and traps that are not visible from the code alone.
+
 ## How it fits together
 
 Electron runs two processes that cannot call each other directly:

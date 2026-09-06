@@ -284,9 +284,11 @@ function settleOrder(orderId, mode = 'Cash') {
 
   const run = db.transaction(() => {
     db.prepare(
-      `UPDATE orders SET status = 'settled', settled_at = datetime('now','localtime')
+      `UPDATE orders SET status = 'settled',
+                        settled_at = datetime('now','localtime'),
+                        payment_mode = ?
         WHERE id = ?`
-    ).run(orderId);
+    ).run(mode, orderId);
     db.prepare(`UPDATE tables SET status = 'free' WHERE id = ?`).run(order.table_id);
   });
   run();
@@ -295,41 +297,79 @@ function settleOrder(orderId, mode = 'Cash') {
 }
 
 /**
- * Takings for one business day ('YYYY-MM-DD').
+ * Order report for one business day, shaped like the printed Order Report:
+ * a status breakdown, then takings split by payment type.
  *
- * Settled and still-open orders are reported separately: a manager checking
- * mid-service needs to see money already collected AND money sitting on live
- * tables, without the two being confused.
+ * Only rows the app can actually populate are returned — no placeholder zeros
+ * for features that do not exist yet, which would read as real data.
  */
 function daySummary(businessDay = businessDayOf()) {
   const db = getDb();
 
   const orders = db
     .prepare(
-      `SELECT id, status FROM orders
+      `SELECT id, status, payment_mode FROM orders
         WHERE business_day = ? AND status IN ('settled','billed','running')`
     )
     .all(businessDay);
 
-  const settled = { count: 0, subTotal: 0, total: 0 };
-  const open = { count: 0, subTotal: 0, total: 0 };
+  // "My Amount" is the gross taken at menu prices; "Total" is the rounded bill.
+  const blank = () => ({ count: 0, gross: 0, total: 0 });
+  const status = { saved: blank(), printed: blank() };
+  const byMode = new Map();
 
   for (const o of orders) {
     const bill = buildBill(o.id);
     if (bill.lines.length === 0) continue;
 
-    const bucket = o.status === 'settled' ? settled : open;
+    const gross = bill.lines.reduce((sum, l) => sum + l.amount, 0) * 1.05;
+
+    // A running order with no KOT is "saved"; anything billed or settled has
+    // had a bill produced, so it counts as printed.
+    const bucket = o.status === 'running' ? status.saved : status.printed;
     bucket.count += 1;
-    bucket.subTotal += bill.subTotal;
+    bucket.gross += gross;
     bucket.total += bill.roundedTotal;
+
+    if (o.status === 'settled') {
+      const mode = o.payment_mode || 'Not Paid';
+      byMode.set(mode, (byMode.get(mode) || 0) + bill.roundedTotal);
+    }
   }
 
-  for (const b of [settled, open]) {
-    b.subTotal = round2(b.subTotal);
+  for (const b of Object.values(status)) {
+    b.gross = round2(b.gross);
     b.total = round2(b.total);
   }
 
-  // Item mix across settled orders only - open tables can still change.
+  const grand = {
+    count: status.saved.count + status.printed.count,
+    gross: round2(status.saved.gross + status.printed.gross),
+    total: round2(status.saved.total + status.printed.total),
+  };
+
+  // Every payment type the report lists, in its printed order. The last three
+  // have no feature behind them yet and always come back zero; they are still
+  // returned so the report reads the same as the one it replaces.
+  const PAYMENT_ROWS = [
+    ['Not Paid', 'Not Paid'],
+    ['Cash', 'Cash'],
+    ['Card', 'Card'],
+    ['Due Payment', 'Due'],
+    ['Other', 'Other'],
+    ['Wallet', null],
+    ['UPI', null],
+    ['Online Orders', null],
+  ];
+
+  const payments = PAYMENT_ROWS.map(([label, key]) => ({
+    mode: label,
+    total: key ? round2(byMode.get(key) || 0) : 0,
+  }));
+
+  const settledTotal = round2([...byMode.values()].reduce((sum, t) => sum + t, 0));
+  const settledCount = orders.filter((o) => o.status === 'settled').length;
+
   const items = db
     .prepare(
       `SELECT ki.item_name AS name, SUM(ki.qty) AS qty,
@@ -343,19 +383,14 @@ function daySummary(businessDay = businessDayOf()) {
     )
     .all(businessDay);
 
-  const cgst = round2(settled.subTotal * 0.025);
-
   return {
     businessDay,
     range: businessDayRange(businessDay),
-    settled,
-    open,
-    // Convenience fields for the headline figures.
-    orderCount: settled.count,
-    subTotal: settled.subTotal,
-    cgst,
-    sgst: cgst,
-    total: settled.total,
+    status,
+    grand,
+    payments,
+    settledCount,
+    settledTotal,
     items: items.map((i) => ({ ...i, amount: round2(i.amount) })),
   };
 }

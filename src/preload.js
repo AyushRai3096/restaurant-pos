@@ -17,6 +17,11 @@ contextBridge.exposeInMainWorld('api', {
   /* menu + tables */
   listMenu: () => call('menu:list'),
   menuFilePath: () => call('menu:file'),
+
+  /* item availability */
+  getAvailability: () => call('menu:availability'),
+  setItemOff: (name, off) => call('menu:setItem', name, off),
+  setCategoryOff: (category, off) => call('menu:setCategory', category, off),
   getBranding: () => call('brand:get'),
   listTables: () => call('tables:list'),
 

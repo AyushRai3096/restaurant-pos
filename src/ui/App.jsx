@@ -3,6 +3,8 @@ import TableGrid from './TableGrid';
 import OrderScreen from './OrderScreen';
 import PrinterSettings from './PrinterSettings';
 import ReportsScreen from './ReportsScreen';
+import StoreStatusPanel from './StoreStatusPanel';
+import ItemOnOffScreen from './ItemOnOffScreen';
 import ReceiptModal from './ReceiptModal';
 import Toasts, { useToasts } from './Toasts';
 import {
@@ -46,6 +48,8 @@ export default function App() {
   const [spinning, setSpinning] = useState(false);
   const [showReports, setShowReports] = useState(false);
   const [brand, setBrand] = useState(FALLBACK_BRAND);
+  const [showStore, setShowStore] = useState(false);
+  const [showItems, setShowItems] = useState(false);
 
   const { toasts, push, dismiss } = useToasts();
 
@@ -75,7 +79,11 @@ export default function App() {
         e.preventDefault();
         setShowReports((v) => !v);
       }
-      if (e.key === 'Escape') setShowReports(false);
+      if (e.key === 'Escape') {
+        setShowReports(false);
+        setShowStore(false);
+        setShowItems(false);
+      }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -102,7 +110,8 @@ export default function App() {
   /** Returns to the table grid from wherever the user is. */
   function handleBack() {
     setActiveOrder(null);
-    setShowReports(false);   // reports render ahead of the grid, so clear them too
+    setShowReports(false);   // these render ahead of the grid, so clear them too
+    setShowItems(false);
     refreshTables();
   }
 
@@ -193,7 +202,17 @@ export default function App() {
 
         <nav className="nav-actions">
           {NAV_ITEMS.map(({ key, label, Icon }) => (
-            <button key={key} className="nav-item" onClick={() => notReady(label)}>
+            <button
+              key={key}
+              className="nav-item"
+              onClick={
+                key === 'store'
+                  ? () => setShowStore(true)
+                  : key === 'itemonoff'
+                    ? () => setShowItems(true)
+                    : () => notReady(label)
+              }
+            >
               <Icon />
               <span>{label}</span>
             </button>
@@ -205,7 +224,9 @@ export default function App() {
         </nav>
       </header>
 
-      {showReports ? (
+      {showItems ? (
+        <ItemOnOffScreen onClose={() => setShowItems(false)} push={push} />
+      ) : showReports ? (
         <ReportsScreen onClose={() => setShowReports(false)} push={push} />
       ) : activeOrder ? (
         <OrderScreen
@@ -269,6 +290,8 @@ export default function App() {
           />
         </>
       )}
+
+      {showStore && <StoreStatusPanel onClose={() => setShowStore(false)} />}
 
       {showSettings && (
         <PrinterSettings onClose={() => setShowSettings(false)} push={push} />

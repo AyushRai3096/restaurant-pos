@@ -107,3 +107,8 @@ convert.py
 # Not committed: branding belongs to whoever owns the mark, not to this repo.
 assets/logo.png
 assets/logo.svg
+
+# Delivery-platform icons are third-party brand marks. Supply your own locally;
+# the UI falls back to coloured letter tiles when they are absent.
+src/ui/assets/zomato.png
+src/ui/assets/swiggy.png

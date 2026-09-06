@@ -44,6 +44,9 @@ function init() {
       -- creation. Reports group on this, never on created_at, so orders taken
       -- after midnight stay with the evening they were part of.
       business_day TEXT,
+      -- How the bill was paid: Cash, Card, Due or Other. Recorded at settle
+      -- time so the day report can break takings down by payment type.
+      payment_mode TEXT,
       created_at   TEXT NOT NULL DEFAULT (datetime('now','localtime')),
       billed_at    TEXT,
       settled_at   TEXT
@@ -65,6 +68,14 @@ function init() {
       qty       INTEGER NOT NULL CHECK (qty > 0)
     );
 
+    -- Items switched off are recorded by name, not by id: the menu lives in a
+    -- CSV that can be re-edited, so a row here survives the menu being reloaded
+    -- and simply stops matching if an item is renamed or removed.
+    CREATE TABLE IF NOT EXISTS item_off (
+      item_name  TEXT PRIMARY KEY,
+      turned_off TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_orders_table ON orders(table_id, status);
     CREATE INDEX IF NOT EXISTS idx_kots_order   ON kots(order_id);
     CREATE INDEX IF NOT EXISTS idx_kotitems_kot ON kot_items(kot_id);
@@ -82,6 +93,10 @@ function init() {
  */
 function migrate() {
   const cols = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+
+  if (!cols.includes('payment_mode')) {
+    db.exec('ALTER TABLE orders ADD COLUMN payment_mode TEXT');
+  }
 
   if (!cols.includes('business_day')) {
     db.exec('ALTER TABLE orders ADD COLUMN business_day TEXT');

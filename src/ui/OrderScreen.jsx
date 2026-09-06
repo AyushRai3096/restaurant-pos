@@ -53,12 +53,30 @@ export default function OrderScreen({
   const [receipt, setReceipt] = useState(null);
   const [payMode, setPayMode] = useState('Cash');
   const [itsPaid, setItsPaid] = useState(false);
+  // Items marked unavailable on the Item On/Off screen cannot be ordered.
+  const [offItems, setOffItems] = useState(new Set());
 
-  const categories = useMemo(() => [...new Set(menu.map((m) => m.category))], [menu]);
+  // A category whose items are all switched off disappears from the rail.
+  const categories = useMemo(
+    () => [...new Set(menu.filter((m) => !offItems.has(m.name)).map((m) => m.category))],
+    [menu, offItems]
+  );
 
   useEffect(() => {
-    if (!category && categories.length) setCategory(categories[0]);
+    if (categories.length === 0) return;
+    // Fall back to the first available category when nothing is selected, and
+    // also when the selected one has disappeared - switching every item in a
+    // category off removes it from the rail, which would otherwise leave the
+    // screen pointing at a category that no longer exists.
+    if (!category || !categories.includes(category)) setCategory(categories[0]);
   }, [categories, category]);
+
+  useEffect(() => {
+    window.api
+      .getAvailability()
+      .then((d) => setOffItems(new Set(d.off)))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!orderId) {
@@ -82,9 +100,12 @@ export default function OrderScreen({
 
   const visibleItems = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (q) return menu.filter((m) => m.name.toLowerCase().includes(q));
-    return menu.filter((m) => m.category === category);
-  }, [menu, category, search]);
+    // Items switched off on the Item On/Off screen are hidden outright, not
+    // shown disabled - the counter should only see what can be ordered.
+    const available = menu.filter((m) => !offItems.has(m.name));
+    if (q) return available.filter((m) => m.name.toLowerCase().includes(q));
+    return available.filter((m) => m.category === category);
+  }, [menu, category, search, offItems]);
 
   // While searching, the rail lists only categories that still have matches.
   const visibleCategories = useMemo(() => {

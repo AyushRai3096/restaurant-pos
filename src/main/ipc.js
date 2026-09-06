@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron';
-import { loadMenu, menuFilePath } from './menu';
+import { loadMenu, menuFilePath, offItems, setItemOff, setCategoryOff } from './menu';
+import { getDb } from './db';
 import { loadBranding } from './branding';
 import * as orders from './orders';
 import * as printer from './printer';
@@ -30,6 +31,24 @@ function register() {
   // navigation, without needing the app restarted.
   handle('menu:list', () => loadMenu().menu);
   handle('menu:file', () => menuFilePath());
+
+  /* Item availability. The order screen uses `off` to block unavailable
+     items; the Item On/Off screen reads and writes it. */
+  handle('menu:availability', () => {
+    const { menu } = loadMenu();
+    return { menu, off: [...offItems(getDb())] };
+  });
+
+  handle('menu:setItem', (itemName, off) => {
+    setItemOff(getDb(), itemName, off);
+    return [...offItems(getDb())];
+  });
+
+  handle('menu:setCategory', (category, off) => {
+    const { menu } = loadMenu();
+    setCategoryOff(getDb(), category, off, menu);
+    return [...offItems(getDb())];
+  });
 
   /* Outlet branding, read fresh so an edit shows on the next launch. */
   handle('brand:get', () => loadBranding());
