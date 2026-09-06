@@ -103,12 +103,8 @@ convert.py
 # Local tool permissions - machine-specific, not project config
 .claude/settings.local.json
 
-# Logo is supplied per-outlet and dropped into the app data folder at runtime.
-# Not committed: branding belongs to whoever owns the mark, not to this repo.
-assets/logo.png
-assets/logo.svg
+# assets/icon.{png,ico}, assets/logo.png and src/ui/assets/{zomato,swiggy}.png
+# are committed on purpose: the build reads assets/icon.ico for the .exe, and
+# the UI needs the logo and delivery-platform marks to match the reference
+# product. Replace assets/logo.png with the outlet's own artwork.
 
-# Delivery-platform icons are third-party brand marks. Supply your own locally;
-# the UI falls back to coloured letter tiles when they are absent.
-src/ui/assets/zomato.png
-src/ui/assets/swiggy.png
