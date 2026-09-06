@@ -179,8 +179,13 @@ function buildBill(orderId) {
   // (457.14 vs the 457.15 the printed receipt shows).
   const taxLines = lines.map((l) => ({
     ...l,
+    // Tax-exclusive values for the printed bill's line items.
     price: round2(l.price / 1.05),
     amount: round2(l.amount / 1.05),
+    // Gross (menu) values — what the order and settle screens show, and what
+    // the customer actually pays per line.
+    menuPrice: round2(l.price),
+    menuAmount: round2(l.amount),
   }));
 
   const subTotal = round2(taxLines.reduce((sum, l) => sum + l.amount, 0));
@@ -322,7 +327,9 @@ function daySummary(businessDay = businessDayOf()) {
     const bill = buildBill(o.id);
     if (bill.lines.length === 0) continue;
 
-    const gross = bill.lines.reduce((sum, l) => sum + l.amount, 0) * 1.05;
+    // Sum the actual menu amounts, not subTotal * 1.05 — the latter compounds
+    // the per-line paise rounding and drifts a few paise per order.
+    const gross = bill.lines.reduce((sum, l) => sum + (l.menuAmount ?? l.amount * 1.05), 0);
 
     // A running order with no KOT is "saved"; anything billed or settled has
     // had a bill produced, so it counts as printed.

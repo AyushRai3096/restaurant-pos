@@ -68,6 +68,14 @@ async function listPrinters() {
  * printer problem, because a failed print must not lose the saved order.
  */
 async function printText(text, title = 'Receipt') {
+  // In development there is no thermal printer attached and Electron's print()
+  // would fall back to the OS "Save as PDF" dialog. Skip it — the caller still
+  // gets an on-screen preview (IS_DEV) instead.
+  if (IS_DEV) {
+    logPrint(`SKIP  ${title}  (development: preview only)`);
+    return { printed: false, reason: 'Development build — preview only, nothing sent to a printer.' };
+  }
+
   if (!settings.enabled) return { printed: false, reason: 'Printing is turned off.' };
 
   const html = toPrintableHtml(text, title);

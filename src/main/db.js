@@ -83,7 +83,43 @@ function init() {
 
   migrate();
   seedTables();
+  prune();
   return db;
+}
+
+// How much history to keep. Orders older than this (by business day) are
+// deleted on startup so the file does not grow without bound.
+const RETENTION_MONTHS = 3;
+
+/**
+ * Drops orders whose business day is more than RETENTION_MONTHS old, with their
+ * KOTs and items. Runs once per launch. kots -> orders has no ON DELETE CASCADE,
+ * so children are removed first.
+ */
+function prune() {
+  const cutoff = db
+    .prepare(`SELECT date('now','localtime','-${RETENTION_MONTHS} months') AS d`)
+    .get().d;
+
+  const stale = db
+    .prepare(`SELECT id FROM orders WHERE business_day IS NOT NULL AND business_day < ?`)
+    .all(cutoff)
+    .map((r) => r.id);
+
+  if (stale.length === 0) return;
+
+  const holes = stale.map(() => '?').join(',');
+  const run = db.transaction(() => {
+    db.prepare(
+      `DELETE FROM kot_items WHERE kot_id IN (SELECT id FROM kots WHERE order_id IN (${holes}))`
+    ).run(...stale);
+    db.prepare(`DELETE FROM kots WHERE order_id IN (${holes})`).run(...stale);
+    db.prepare(`DELETE FROM orders WHERE id IN (${holes})`).run(...stale);
+  });
+  run();
+
+  console.info(`[db] pruned ${stale.length} order(s) older than ${cutoff}`);
+  db.exec('VACUUM');
 }
 
 /**

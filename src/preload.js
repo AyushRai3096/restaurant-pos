@@ -48,6 +48,11 @@ contextBridge.exposeInMainWorld('api', {
 
   isDev: () => call('app:isDev'),
 
+  /* window controls (frameless window, title bar drawn in the UI) */
+  windowMinimize: () => ipcRenderer.send('window:minimize'),
+  windowToggleMaximize: () => ipcRenderer.send('window:toggleMaximize'),
+  windowClose: () => ipcRenderer.send('window:close'),
+
   /* reporting */
   getDayReport: (businessDay) => call('report:day', businessDay),
   getTodayReport: () => call('report:today'),

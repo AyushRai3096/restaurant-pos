@@ -65,19 +65,19 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   font-size: calc(12.5 * var(--s));
   color: #35393f;
   flex-shrink: 0;
+  -webkit-app-region: drag; /* frameless window: this bar drags the window */
 }
 
 .titlebar-icon {
   width: calc(15 * var(--s));
   height: calc(15 * var(--s));
-  border-radius: calc(3 * var(--s));
-  background: var(--red);
+  object-fit: contain;
   flex-shrink: 0;
 }
 
 .titlebar-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.titlebar-controls { margin-left: auto; display: flex; }
+.titlebar-controls { margin-left: auto; display: flex; -webkit-app-region: no-drag; }
 
 .tb-btn {
   width: calc(45 * var(--s));

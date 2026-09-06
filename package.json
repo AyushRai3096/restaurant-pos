@@ -36,6 +36,9 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
+  "overrides": {
+    "@electron/node-gyp": "npm:node-gyp@^12.4.0"
+  },
   "allowScripts": {
     "better-sqlite3@13.0.3": true,
     "esbuild@0.21.5": true

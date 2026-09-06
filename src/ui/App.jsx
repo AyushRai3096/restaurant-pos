@@ -7,6 +7,7 @@ import StoreStatusPanel from './StoreStatusPanel';
 import ItemOnOffScreen from './ItemOnOffScreen';
 import ReceiptModal from './ReceiptModal';
 import Toasts, { useToasts } from './Toasts';
+import appIcon from '../../assets/icon.png';
 import {
   IconToggle, IconStore, IconLive, IconOrders, IconRecent, IconHold,
   IconAlerts, IconHeadset, IconLogout, IconSearch, IconRefresh,
@@ -153,15 +154,15 @@ export default function App() {
     <div className="app">
       {/* ---------- window title bar ---------- */}
       <div className="titlebar">
-        <span className="titlebar-icon" />
+        <img className="titlebar-icon" src={appIcon} alt="" />
         <span className="titlebar-text">
           {brand.outletName} {brand.branchName}
           {brand.outletCode ? ` (${brand.outletCode})` : ''} - {brand.tagline}
         </span>
         <div className="titlebar-controls">
-          <button className="tb-btn" title="Minimise">&#8211;</button>
-          <button className="tb-btn" title="Maximise">&#9633;</button>
-          <button className="tb-btn close" title="Close">&#10005;</button>
+          <button className="tb-btn" title="Minimise" onClick={() => window.api.windowMinimize()}>&#8211;</button>
+          <button className="tb-btn" title="Maximise" onClick={() => window.api.windowToggleMaximize()}>&#9633;</button>
+          <button className="tb-btn close" title="Close" onClick={() => window.api.windowClose()}>&#10005;</button>
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import * as db from './main/db';
 import * as ipc from './main/ipc';
-import { seedDefaults } from './main/assets';
+import { seedDefaults, assetPath } from './main/assets';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -20,6 +20,12 @@ const createWindow = () => {
     backgroundColor: '#1f2733',
     autoHideMenuBar: true,
     title: 'Restaurant POS',
+    // The UI draws its own title bar (.titlebar in App.jsx), like the reference
+    // app. Without this we get two stacked bars — the OS frame and ours.
+    frame: false,
+    // Taskbar / window icon. The packaged .exe carries its own icon from
+    // packagerConfig; this covers `npm start` and the Alt-Tab entry.
+    icon: assetPath('icon.png') ?? undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

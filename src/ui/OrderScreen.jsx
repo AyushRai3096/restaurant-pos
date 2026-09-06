@@ -95,7 +95,9 @@ export default function OrderScreen({
   useEffect(() => {
     if (!detail) return;
     if (!isView && detail.order?.status !== 'billed') return;
-    setLines(detail.bill.lines.map((l) => ({ name: l.name, price: l.price, qty: l.qty })));
+    // Show the gross menu price, not the tax-exclusive value the printed bill
+    // breaks out. `menuPrice` falls back for older order records.
+    setLines(detail.bill.lines.map((l) => ({ name: l.name, price: l.menuPrice ?? l.price, qty: l.qty })));
   }, [isView, detail]);
 
   const visibleItems = useMemo(() => {
@@ -299,7 +301,12 @@ export default function OrderScreen({
 
   /* ---- derived ---- */
 
-  const total = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
+  // Draft orders: sum the gross lines. Once billed, show the finalised bill
+  // total (includes the round-off) so it matches the printed receipt.
+  const total =
+    (isView || orderIsBilled) && detail?.bill
+      ? detail.bill.roundedTotal
+      : lines.reduce((sum, l) => sum + l.price * l.qty, 0);
   // Once the bill is printed the screen switches to its settle actions, no
   // matter whether the table was tapped or opened through the eye icon.
   const tableNo = tableName.replace(/^T/i, '');

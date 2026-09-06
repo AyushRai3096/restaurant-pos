@@ -34,10 +34,15 @@ height: calc(62 * var(--s));   /* 62px in the reference design */
 `--s: calc(1vw / 19.2)` — so 1 unit is one pixel at 1920px wide, and the layout
 keeps its proportions at any window size. Never hardcode a px value.
 
-**Third-party brand assets stay out.** The reference app's logo, and Zomato's and
-Swiggy's marks, are trademarks. They are gitignored and the UI falls back to
-letter tiles. Supply your own at `src/ui/assets/{zomato,swiggy}.png` and
-`~/…/Restaurant POS/logo.png` if you want them locally.
+**Brand assets are committed.** `assets/icon.{png,ico}` (the app icon — the build
+reads `icon.ico` for the `.exe`), `assets/logo.png` (nav-bar wordmark, seeded to
+the data folder on first run) and `src/ui/assets/{zomato,swiggy}.png` (delivery
+platform marks, loaded by `import.meta.glob` in `platformLogos.js`) all live in
+the repo now — the UI needs them to match the reference product. The Zomato and
+Swiggy marks are their trademarks; this is nominative use in an order screen.
+`assets/logo.png` currently still holds the *reference app's* wordmark — swap it
+for the outlet's own. Without any `logo.png` the UI falls back to the text
+wordmark from `branding.json` (`VEERJI POS`), so a clone still builds and runs.
 
 ## Decisions worth knowing
 
@@ -63,6 +68,29 @@ rather than *Running KOT* (yellow).
 **Previews are development-only.** `IS_DEV = !app.isPackaged` in
 `src/main/printer.js`. A packaged build sends `preview: null` and prints
 directly — it is not a setting someone can switch on at the counter.
+
+**Packaging is `npm install` then `npm run make`** — no flags, no manual steps.
+The installer lands in `out/make/squirrel.windows/x64/`. Three non-obvious pieces
+make it work, all in `forge.config.js` / `package.json`:
+
+- **`overrides["@electron/node-gyp"] = "npm:node-gyp@^12.4.0"`.** `@electron/rebuild`
+  pins a node-gyp fork whose Visual Studio detector predates VS 2026 (v18) and
+  aborts with "could not find any Visual Studio" even when it is installed.
+  Aliasing to upstream node-gyp fixes npm's implicit build of `better-sqlite3`
+  (it ships a `binding.gyp`; the build is a no-op because v13 bundles a prebuilt
+  N-API binary per platform in `prebuilds/`).
+- **`rebuildConfig: { onlyModules: [] }`** stops Forge recompiling `better-sqlite3`
+  for Electron. N-API is ABI-stable, so `prebuilds/win32-x64.node` loads in
+  Electron 43 unchanged — no MSVC needed at package time.
+- **`packagerConfig.ignore` + `plugin-auto-unpack-natives`.** The Vite plugin's
+  default packages only `.vite/` and drops all of `node_modules`; the custom
+  `ignore` lets `node_modules/better-sqlite3` back in, and auto-unpack pulls the
+  `.node` out of the asar so Electron can load it.
+
+A full C++ toolchain is *not* required for a normal build. It is only needed if
+you ever set `onlyModules` back to rebuilding native modules from source — then
+install the VS Build Tools "Desktop development with C++" workload (VS 2026 is
+fine with node-gyp ≥ 12).
 
 ## Traps already hit
 
@@ -93,16 +121,21 @@ item on/off, store on/off panel, business-day logic, menu from CSV.
 Controller, Export Excel, Print (on the report), Action column, checkboxes,
 Split, "It's Paid", most nav items.
 
-**Not started:** packaging to `.exe`, real thermal-printer testing, Addon On/Off,
-Live View, Orders, Recent, Hold, Alerts.
+**Not started:** real thermal-printer testing, Addon On/Off, Live View, Orders,
+Recent, Hold, Alerts.
+
+**Packaging works** on Windows (`npm run make` → Squirrel installer). Built and
+launched from a clean checkout on 2026-09-06; the packaged app opens the DB and
+seeds the data folder. See "Packaging" under *Decisions worth knowing*.
 
 ## Immediate next steps
 
-1. **`npm run make`** — never successfully run. Packaging failed on macOS for
-   environment reasons (the packager's extraction subprocess dies silently); it
-   should work natively on Windows. Watch for `better-sqlite3` needing
-   `npx electron-rebuild -f -w better-sqlite3`.
-2. **Test printing on the real thermal printer.** Templates are in
+1. **Test printing on the real thermal printer.** Templates are in
    `src/main/receipt.js`, sized for 80mm. Pick the printer from the hamburger
    menu, then Test Print. This is the one thing never verified.
-3. **Clone to a path without spaces** — `node-gyp` struggles with them on Windows.
+2. **Trim the installer.** It ships all 8 `better-sqlite3` platform binaries
+   (~11 MB dead weight). Pruning `prebuilds/` to `win32-x64.node` before
+   packaging would shrink it.
+3. **Clone to a path without spaces** if you ever build native modules from
+   source — `node-gyp` struggles with them on Windows. (Not an issue for the
+   current prebuilt-only setup.)

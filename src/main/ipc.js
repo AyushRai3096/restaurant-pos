@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, BrowserWindow } from 'electron';
 import { loadMenu, menuFilePath, offItems, setItemOff, setCategoryOff } from './menu';
 import { getDb } from './db';
 import { loadBranding } from './branding';
@@ -26,6 +26,16 @@ function handle(channel, fn) {
 }
 
 function register() {
+  /* window controls — the frameless window's title bar is drawn by the UI */
+  const win = (e) => BrowserWindow.fromWebContents(e.sender);
+  ipcMain.on('window:minimize', (e) => win(e)?.minimize());
+  ipcMain.on('window:toggleMaximize', (e) => {
+    const w = win(e);
+    if (w?.isMaximized()) w.unmaximize();
+    else w?.maximize();
+  });
+  ipcMain.on('window:close', (e) => win(e)?.close());
+
   /* menu + tables */
   // Re-read on every request so an edit to menu.csv shows up on the next
   // navigation, without needing the app restarted.
