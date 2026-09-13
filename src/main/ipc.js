@@ -12,6 +12,9 @@ import { buildKotText, buildBillText, toPrintableHtml } from './receipt';
  * Anything not registered here simply does not exist to the renderer.
  */
 
+// Every KOT prints twice: one for the kitchen, one for the counter/captain.
+const KOT_COPIES = { copies: 2 };
+
 // Wraps a handler so a thrown error becomes { ok:false, error } instead of
 // an unhandled rejection in the UI.
 function handle(channel, fn) {
@@ -73,7 +76,8 @@ function register() {
     const kot = orders.addKot(orderId, items);
     const result = await printer.printText(
       buildKotText(kot),
-      `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`
+      `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`,
+      KOT_COPIES
     );
     if (result.printed) orders.markKotPrinted(kot.id);
 
@@ -90,7 +94,8 @@ function register() {
     if (!kot) throw new Error('KOT not found.');
     const result = await printer.printText(
       buildKotText(kot),
-      `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`
+      `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`,
+      KOT_COPIES
     );
     return {
       kot,
@@ -110,7 +115,8 @@ function register() {
       const kot = orders.addKot(orderId, items);
       kotResult = await printer.printText(
         buildKotText(kot),
-        `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`
+        `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`,
+        KOT_COPIES
       );
       if (kotResult.printed) orders.markKotPrinted(kot.id);
     }
@@ -126,7 +132,8 @@ function register() {
       const kot = orders.addKot(orderId, items);
       kotResult = await printer.printText(
         buildKotText(kot),
-        `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`
+        `KOT ${kot.kot_number} - ${kot.table?.name ?? ''}`,
+        KOT_COPIES
       );
       if (kotResult.printed) orders.markKotPrinted(kot.id);
     }

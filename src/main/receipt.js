@@ -57,7 +57,7 @@ export function buildKotText(kot) {
   <div class="k-head">
     <div>${when.full}</div>
     <div>KOT - ${kot.kot_number}</div>
-    <div>Dine In</div>
+    <div class="bold">Dine In</div>
     <div class="bold">Table No: ${esc(kot.table?.name?.replace(/^T/i, '') ?? '-')}</div>
   </div>
 
@@ -115,7 +115,8 @@ export function buildBillText(detail) {
     <div class="b-addr">${esc(RESTAURANT.gstin)}</div>
   </div>
 
-  <div class="rule-double"></div>
+  <div class="rule"></div>
+  <div class="rule rule-gap"></div>
 
   <table class="b-meta">
     <tr>
@@ -157,20 +158,19 @@ export function buildBillText(detail) {
     </tr>
     <tr>
       <td></td>
-      <td class="right">CGST@2.5 2.5%</td>
+      <td class="right nowrap">CGST@2.5 2.5%</td>
       <td class="b-num">${money(bill.cgst)}</td>
     </tr>
     <tr>
       <td></td>
-      <td class="right">SGST@2.5 2.5%</td>
+      <td class="right nowrap">SGST@2.5 2.5%</td>
       <td class="b-num">${money(bill.sgst)}</td>
     </tr>
-    ${
-      roundOff !== 0
-        ? `<tr><td></td><td class="right small">Round off</td>
-             <td class="b-num small">${roundOff > 0 ? '' : '-'}${money(Math.abs(roundOff))}</td></tr>`
-        : ''
-    }
+    <tr class="roundoff">
+      <td></td>
+      <td class="right small">Round off</td>
+      <td class="b-num small">${roundOff > 0 ? '' : roundOff < 0 ? '-' : ''}${money(Math.abs(roundOff))}</td>
+    </tr>
     <tr class="grand">
       <td></td>
       <td class="right bold">Grand Total</td>
@@ -178,7 +178,7 @@ export function buildBillText(detail) {
     </tr>
   </table>
 
-  <div class="rule-double"></div>
+  <div class="rule"></div>
 
   <div class="b-thanks">Thanks</div>
 </div>`;
@@ -187,18 +187,20 @@ export function buildBillText(detail) {
 /* ------------------------------------------------------------ printing ---- */
 
 const STYLES = `
+  /* This printer's driver feeds a continuous form sized to the rendered page,
+     so body padding is what actually controls the blank space around the
+     printout - confirmed by comparing printouts at different padding values.
+     Content lives in the 72mm printable strip of the 80mm roll. */
   @page { size: 80mm auto; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; }
   body {
-    /* border-box keeps the 3mm side padding INSIDE the 80mm paper width -
-       otherwise the sheet is 86mm and the right-hand column is clipped. */
-    width: 80mm;
+    width: 72mm;
     box-sizing: border-box;
     font-family: "Segoe UI", Arial, sans-serif;
     font-size: 12px;
     line-height: 1.25;
     color: #000;
-    padding: 3mm 3mm 8mm;
+    padding: 2mm 7mm 55mm;
   }
   * { box-sizing: border-box; }
   table { table-layout: fixed; }
@@ -207,38 +209,46 @@ const STYLES = `
   td { vertical-align: top; padding: 1px 0; }
   .bold { font-weight: 700; }
   .right { text-align: right; }
+  .nowrap { white-space: nowrap; }
   .small { font-size: 10px; }
 
-  /* rules: single, double and the KOT's dotted line */
-  .rule { border-top: 1px solid #000; margin: 3px 0; }
-  .rule-double { border-top: 3px double #000; margin: 3px 0; }
+  /* A thick line is the "bold" look here. Two stacked .rule divs stand in for
+     a double rule - border-style:double renders unreliably on thermal drivers.
+     .dotted is the KOT's item/header separator. */
+  .rule { border-top: 2px solid #000; margin: 2px 0; }
+  .rule-gap { margin-top: 8px; }
   .dotted { border-top: 2px dotted #000; margin: 4px 0; }
 
   /* ---- KOT ---- */
-  .k-head { text-align: center; font-size: 13px; line-height: 1.35; }
-  .k-head .bold { font-size: 14px; }
-  .k-table td { padding: 2px 0; }
+  .k-head { text-align: center; font-size: 11.5px; line-height: 1.35; }
+  .k-head .bold { font-size: 11.5px; }
+  .k-table td { padding: 0; }
   .k-table thead td { font-size: 12px; }
-  .k-item { width: 58%; font-weight: 700; font-size: 13px; }
+  .k-item { width: 58%; font-weight: 700; font-size: 12px; }
   .k-table thead .k-item { font-weight: 400; }
   .k-note { width: 22%; text-align: center; }
   .k-qty  { width: 20%; text-align: center; }
 
   /* ---- bill ---- */
   .b-head { text-align: center; }
-  .b-name { font-size: 15px; font-weight: 700; }
-  .b-addr { font-size: 11px; line-height: 1.3; }
+  .b-name { font-size: 13px; font-weight: 700; }
+  .b-addr { font-size: 10px; line-height: 1.3; }
   .b-meta td { font-size: 12px; }
   .b-table thead td { font-size: 11.5px; }
-  .b-item { width: 46%; }
+  .b-item { width: 42%; }
   .b-qty  { width: 12%; text-align: center; }
-  .b-num  { text-align: right; width: 21%; font-variant-numeric: tabular-nums; }
+  .b-num  { text-align: right; width: 25%; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .b-totals td { font-size: 12px; }
+  .b-totals td.small { font-size: 10px; }
   /* A border on <tr> is not painted in print rendering, so the rules go on the
-     cells: under the column header, and above the grand total. */
+     cells: under the column header, and above round-off/grand total - that
+     separator has to sit above Round off, not above Grand Total, or Round off
+     visually reads as part of the CGST/SGST block instead of the total. */
   .b-table thead .head-row td { border-bottom: 1px solid #000; padding-bottom: 2px; }
   .b-table tbody tr:first-child td { padding-top: 3px; }
-  .b-totals .grand td { font-size: 15px; padding-top: 4px; border-top: 1px solid #000; }
+  .b-totals .roundoff td { padding-top: 4px; border-top: 1px solid #000; }
+  .b-totals .grand td { font-size: 15px; padding-top: 2px; }
+  .b-totals .grand td.b-num { padding-left: 5px; }
   .b-thanks { text-align: center; font-size: 12px; margin-top: 4px; }
 `;
 
